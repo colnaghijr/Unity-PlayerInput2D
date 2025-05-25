@@ -1,97 +1,90 @@
 using System;
-using UnityEditor.UI;
 using UnityEngine;
-using UnityEngine.UIElements;
-using UnityEditor;
-using UnityEngine.InputSystem;
+// using UnityEditor.UI; // Removed
+// using UnityEngine.UIElements; // Removed
+// using UnityEngine.InputSystem; // Removed as InputManager handles direct input types
+
+#if UNITY_EDITOR
+using UnityEditor; // Moved inside UNITY_EDITOR block
+#endif
 
 public class aimController : MonoBehaviour
 {
     // Visual, Game Objects
-    public GameObject aim; // must be a child GO; if external, vector calculations need to take it into consideration
-    public static Camera mainCamera;
+    [Tooltip("The GameObject representing the aim indicator. Must be a child or properly offset.")]
+    public GameObject aim; 
+    // public static Camera mainCamera; // Removed, GameUtils.GetMouseWorldPosition will use Camera.main
 
     // Gizmos
-    string debug_text;
+    // string debug_text; // Will be removed, InputManager can provide debug info if needed
 
     // Physics for movement
-    [SerializeField] float movementSpeed;
-    [SerializeField] Rigidbody2D rigidBody;
+    private Rigidbody2D rigidBody; 
 
     // Input control
-    [SerializeField] InputActionAsset playerControls;
-    InputAction moveAction;
-    InputAction lookAction;
-    bool useGamePad = false;
+    private InputManager inputManager;
     Vector2 lastLookDirection; // to maintain target if gamepad is let go and player is moving
-    InputDevice lastInputDevice;
 
-    const float aimRadius = 5.0f;
-    const string Player = "Player";
-    const string Move = "Move";
-    const string Look = "Look";
+    const float aimRadius = 5.0f; // This is already a const, which is fine.
+    private const float LookInputThreshold = 0.1f; // Defined constant
+    
+    // const string Player = "Player"; // Not strictly needed here anymore
+    // const string Look = "Look"; // Not strictly needed here anymore
     void Start()
     {
-        moveAction = playerControls.FindActionMap(nameof(Player)).FindAction(nameof(Move));
-        lookAction = playerControls.FindActionMap(nameof(Player)).FindAction(nameof(Look));
-        if (mainCamera == null) mainCamera = Camera.main;
+        inputManager = FindObjectOfType<InputManager>();
+        if (inputManager == null)
+        {
+            Debug.LogError("InputManager not found in the scene!");
+        }
+
+        rigidBody = GetComponent<Rigidbody2D>();
+        if (rigidBody == null)
+        {
+            Debug.LogError("Rigidbody2D not found on the same GameObject as aimController!");
+        }
+        
+        // lookAction = playerControls.FindActionMap(nameof(Player)).FindAction(nameof(Look)); // Moved to InputManager
+        // if (mainCamera == null) mainCamera = Camera.main; // Removed
     }
 
-    public static Vector3 getMouseWorldPosition()
-    {
-        var mousePosition = Input.mousePosition;
-        var screenToWorldPosition = mainCamera.ScreenToWorldPoint(mousePosition);
-        screenToWorldPosition.z = 0f; //always ignore Z for tilemaps ZasY
-
-        return screenToWorldPosition;
-    }
+    // public static Vector3 getMouseWorldPosition() // Moved to GameUtils.cs
+    // {
+    //     var mousePosition = Input.mousePosition;
+    //     var screenToWorldPosition = mainCamera.ScreenToWorldPoint(mousePosition);
+    //     screenToWorldPosition.z = 0f; //always ignore Z for tilemaps ZasY
+    //
+    //     return screenToWorldPosition;
+    // }
 
     void Update()
     {
         CheckPlayerLookTarget();
-        CheckPlayerMoveTarget();
-    }
-
-    void CheckPlayerMoveTarget()
-    {
-        Vector2 sourcePosition = gameObject.transform.position;
-        var moveDirection = moveAction.ReadValue<Vector2>();
-
-        CheckInputDevice();
-
-        // mouse clicking takes precedence and disables gamepad controls
-        if (Input.GetMouseButtonDown(0))
-        {
-            useGamePad = false;
-            debug_text = "keyboard";
-        }
-
-        // move character at whatever speed or forces needed
-        Vector2 movement = moveDirection * movementSpeed;
-        Vector2 newPos = rigidBody.position + movement * Time.fixedDeltaTime;
-        rigidBody.MovePosition(newPos);
-
-        // visual gizmo that takes shows input intensity (range of movement)
-        Debug.DrawLine(sourcePosition, rigidBody.position + movement, Color.green);
     }
 
     void CheckPlayerLookTarget()
     {
-        Vector2 sourcePosition = rigidBody.position;
-        var lookDirection = lookAction.ReadValue<Vector2>();
+        if (inputManager == null || rigidBody == null) 
+        {
+            // Safety check to prevent errors if InputManager or Rigidbody2D is not found
+            return;
+        }
 
-        CheckInputDevice();
+        Vector2 sourcePosition = rigidBody.position;
+        var lookDirection = inputManager.LookDirection; // Get from InputManager
+
+        // CheckInputDevice(); // Removed, InputManager handles this
 
         // mouse clicking takes precedence and disables gamepad controls
-        if (Input.GetMouseButtonDown(0))
-        {
-            useGamePad = false;
-            debug_text = "keyboard";
-        }
+        // if (Input.GetMouseButtonDown(0)) // Removed, InputManager handles this
+        // {
+            // useGamePad = false; // Handled by InputManager
+            // debug_text = "keyboard"; // Handled by InputManager or can be derived from inputManager.IsGamepadUsed
+        // }
 
         // ignore input less than a minimum threshold to avoid 
         // aim jerking around as input gets closer to zero
-        if (Math.Abs(lookDirection.x) < 0.1 && Math.Abs(lookDirection.y) < 0.1)
+        if (Math.Abs(lookDirection.x) < LookInputThreshold && Math.Abs(lookDirection.y) < LookInputThreshold) // Used constant
         {
             // just use last known good direction and keep it stationary
             lookDirection = lastLookDirection;
@@ -103,13 +96,13 @@ public class aimController : MonoBehaviour
         }
 
         Vector2 targetPosition;
-        if (useGamePad)
+        if (inputManager.IsGamepadUsed) // Get from InputManager
         {
             targetPosition = rigidBody.position + lookDirection;
         }
         else
         {
-            targetPosition = getMouseWorldPosition();
+            targetPosition = GameUtils.GetMouseWorldPosition(); // Updated call
         }
 
         // visual gizmo that takes shows input intensity (range of movement)
@@ -127,34 +120,28 @@ public class aimController : MonoBehaviour
         aim.transform.rotation = Quaternion.Euler(0, 0, (Mathf.Rad2Deg * relativeAngleToTarget) - 90);
     }
 
-    void CheckInputDevice()
-    {
-        if (moveAction.activeControl != null && moveAction.activeControl.device != lastInputDevice)
-        {
-            // keep track of last input type
-            lastInputDevice = moveAction.activeControl.device;
-            if (moveAction.activeControl?.device is Keyboard)
-            {
-                useGamePad = false;
-                debug_text = "keyboard";
-            }
-            else
-            {
-                useGamePad = true;
-                debug_text = "gamepad";
-            }
-        }
-    }
+    // void CheckInputDevice() // Removed, logic moved to InputManager.cs
+    // {
+    //     // ...
+    // }
 
+#if UNITY_EDITOR
     virtual public void OnDrawGizmos()
     {
-        var c = gameObject.transform;
-        float x = c.position.x - 1;
-        float y = c.position.y - 1;
-        float z = c.position.z;
-        var textPosition = new Vector3(x, y, z);
+        // Example of how you might display info from InputManager if it's available
+        if (Application.isPlaying && inputManager != null)
+        {
+            string deviceType = inputManager.IsGamepadUsed ? "Gamepad" : "Keyboard/Mouse";
+            Handles.Label(transform.position + Vector3.down * 1.5f, $"Input: {deviceType}");
+        }
+        else if (!Application.isPlaying)
+        {
+            Handles.Label(transform.position + Vector3.down * 1.5f, "InputManager info available at runtime.");
+        }
 
-        var logString = string.Format("{0}", debug_text);
-        Handles.Label(textPosition, logString);
+        // Keep existing gizmo logic for aim visualization if needed,
+        // for example, showing the aimRadius if it were dynamic.
+        // Handles.DrawWireDisc(transform.position, Vector3.forward, aimRadius);
     }
+#endif
 }
