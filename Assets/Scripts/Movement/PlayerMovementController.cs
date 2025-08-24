@@ -1,5 +1,4 @@
 using UnityEngine;
-// using UnityEngine.InputSystem; // Removed as InputManager handles direct input types
 
 public class PlayerMovementController : MonoBehaviour
 {
@@ -7,8 +6,6 @@ public class PlayerMovementController : MonoBehaviour
     [SerializeField] private Rigidbody2D rigidBody;
 
     private InputManager inputManager;
-    // private PlayerControls playerControls; // Removed, InputManager handles this
-    // private InputAction moveAction; // Removed, InputManager handles this
 
     void Start()
     {
@@ -22,11 +19,6 @@ public class PlayerMovementController : MonoBehaviour
         {
             rigidBody = GetComponent<Rigidbody2D>();
         }
-
-        // Temporary initialization for moveAction and playerControls // Removed
-        // playerControls = new PlayerControls(); // Removed
-        // moveAction = playerControls.Player.Move; // Removed
-        // playerControls.Player.Enable(); // Removed
     }
 
     void FixedUpdate()
@@ -49,7 +41,6 @@ public class PlayerMovementController : MonoBehaviour
 
             rigidBody.MovePosition(newPosition);
 
-            // Debug line drawing for movement
 #if UNITY_EDITOR
             Debug.DrawLine(currentPosition, newPosition, Color.green);
 #endif

@@ -4,9 +4,7 @@ public static class GameUtils
 {
     public static Vector3 GetMouseWorldPosition()
     {
-        // It's good practice to cache Camera.main if called very frequently,
-        // but for a utility like this, direct access is often fine.
-        // If performance issues arise, consider passing Camera as a parameter.
+        // It's good practice to cache Camera.main if called very frequently
         Camera mainCamera = Camera.main;
         if (mainCamera == null)
         {
