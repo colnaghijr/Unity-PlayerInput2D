@@ -40,7 +40,7 @@ public class PlayerMovementController : MonoBehaviour
         Vector2 moveDirection = inputManager.MoveDirection;
 
         // Calculate and apply movement
-        if (moveDirection.sqrMagnitude > 0.1f) // Check if there is significant input
+        if (moveDirection.sqrMagnitude > 0.01f) // Check if there is significant input
         {
             Vector2 currentPosition = rigidBody.position;
             Vector2 movement = moveDirection * movementSpeed * Time.fixedDeltaTime;
@@ -49,7 +49,8 @@ public class PlayerMovementController : MonoBehaviour
             rigidBody.MovePosition(newPosition);
 
 #if UNITY_EDITOR
-            Debug.DrawLine(currentPosition, newPosition, Color.green);
+            // Debug line drawing for movement
+            Debug.DrawLine(currentPosition, currentPosition + moveDirection * movementSpeed, Color.green);
 #endif
         }
     }

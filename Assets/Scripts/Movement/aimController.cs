@@ -51,6 +51,7 @@ public class aimController : MonoBehaviour
 
         Vector2 sourcePosition = rigidBody.position;
         var lookDirection = inputManager.LookDirection;
+        var rawLookInput = lookDirection;
 
         // ignore input less than a minimum threshold to avoid 
         // aim jerking around as input gets closer to zero
@@ -75,8 +76,11 @@ public class aimController : MonoBehaviour
             targetPosition = GameUtils.GetMouseWorldPosition();
         }
 
+#if UNITY_EDITOR
         // visual gizmo that takes shows input intensity (range of movement)
-        Debug.DrawLine(sourcePosition, targetPosition, Color.red);
+        var targetPos = inputManager.IsGamepadUsed ? sourcePosition + rawLookInput * aimRadius : targetPosition;
+        Debug.DrawLine(sourcePosition, targetPos, Color.red);
+#endif
 
         var relativeAngleToTarget = Mathf.Atan2(targetPosition.y - sourcePosition.y, targetPosition.x - sourcePosition.x);
 
