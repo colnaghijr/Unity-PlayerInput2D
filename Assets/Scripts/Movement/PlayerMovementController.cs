@@ -1,5 +1,9 @@
 using UnityEngine;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 public class PlayerMovementController : MonoBehaviour
 {
     [SerializeField] private float movementSpeed;
@@ -9,10 +13,13 @@ public class PlayerMovementController : MonoBehaviour
 
     void Start()
     {
-        inputManager = FindObjectOfType<InputManager>(); 
         if (inputManager == null)
         {
-            Debug.LogError("InputManager not found in the scene!");
+            inputManager = FindFirstObjectByType<InputManager>();
+            if (inputManager == null)
+            {
+                Debug.LogError("InputManager not found in the scene!");
+            }
         }
 
         if (rigidBody == null)

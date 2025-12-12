@@ -2,17 +2,17 @@ using System;
 using UnityEngine;
 
 #if UNITY_EDITOR
-using UnityEditor; // Moved inside UNITY_EDITOR block
+using UnityEditor;
 #endif
 
 public class aimController : MonoBehaviour
 {
     // Visual, Game Objects
     [Tooltip("The GameObject representing the aim indicator. Must be a child or properly offset.")]
-    public GameObject aim; 
+    public GameObject aim;
 
     // Physics for movement
-    private Rigidbody2D rigidBody; 
+    private Rigidbody2D rigidBody;
 
     // Input control
     private InputManager inputManager;
@@ -20,10 +20,10 @@ public class aimController : MonoBehaviour
 
     const float aimRadius = 5.0f;
     private const float LookInputThreshold = 0.1f;
-    
+
     void Start()
     {
-        inputManager = FindObjectOfType<InputManager>();
+        inputManager = FindFirstObjectByType<InputManager>();
         if (inputManager == null)
         {
             Debug.LogError("InputManager not found in the scene!");
@@ -43,14 +43,14 @@ public class aimController : MonoBehaviour
 
     void CheckPlayerLookTarget()
     {
-        if (inputManager == null || rigidBody == null) 
+        // Safety check to prevent errors if InputManager or Rigidbody2D is not found
+        if (inputManager == null || rigidBody == null)
         {
-            // Safety check to prevent errors if InputManager or Rigidbody2D is not found
             return;
         }
 
         Vector2 sourcePosition = rigidBody.position;
-        var lookDirection = inputManager.LookDirection; // Get from InputManager
+        var lookDirection = inputManager.LookDirection;
 
         // ignore input less than a minimum threshold to avoid 
         // aim jerking around as input gets closer to zero
@@ -66,13 +66,13 @@ public class aimController : MonoBehaviour
         }
 
         Vector2 targetPosition;
-        if (inputManager.IsGamepadUsed) // Get from InputManager
+        if (inputManager.IsGamepadUsed)
         {
             targetPosition = rigidBody.position + lookDirection;
         }
         else
         {
-            targetPosition = GameUtils.GetMouseWorldPosition(); // Updated call
+            targetPosition = GameUtils.GetMouseWorldPosition();
         }
 
         // visual gizmo that takes shows input intensity (range of movement)
@@ -100,7 +100,7 @@ public class aimController : MonoBehaviour
         }
         else if (!Application.isPlaying)
         {
-            Handles.Label(transform.position + Vector3.down * 1.5f, "InputManager info available at runtime.");
+            Handles.Label(transform.position + Vector3.down * 1.5f, "InputManager info will be available at runtime.");
         }
     }
 #endif

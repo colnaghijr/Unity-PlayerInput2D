@@ -28,11 +28,20 @@ public class InputManager : MonoBehaviour
         moveAction = playerControls.FindActionMap("Player").FindAction("Move");
         lookAction = playerControls.FindActionMap("Player").FindAction("Look");
 
-        if (moveAction == null) Debug.LogError("Move action not found!");
-        if (lookAction == null) Debug.LogError("Look action not found!");
-        
-        moveAction.Enable();
-        lookAction.Enable();
+        if (moveAction == null) Debug.LogError("Move action not found.");
+        if (lookAction == null) Debug.LogError("Look action not found.");
+    }
+
+    private void OnEnable()
+    {
+        moveAction?.Enable();
+        lookAction?.Enable();
+    }
+
+    private void OnDisable()
+    {
+        moveAction?.Disable();
+        lookAction?.Disable();
     }
 
     void Update()

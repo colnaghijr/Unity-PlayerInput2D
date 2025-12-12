@@ -19,7 +19,7 @@ public static class GameUtils
         // For a 2D setup with an orthographic camera, Z is often irrelevant for ScreenToWorldPoint
         // but we set the result's Z to 0f afterwards.
         Vector3 screenToWorldPosition = mainCamera.ScreenToWorldPoint(new Vector3(mousePosition.x, mousePosition.y, mainCamera.nearClipPlane));
-        
+
         screenToWorldPosition.z = 0f; // Ensure Z is 0 for 2D
         return screenToWorldPosition;
     }
