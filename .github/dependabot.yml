@@ -1,6 +1,15 @@
 version: 2
 updates:
-  - package-ecosystem: "github-actions"
+  # 1. Enable NuGet if you use .csproj files with <PackageReference>
+  # If you don't use NuGet packages, remove this block too!
+  - package-ecosystem: "nuget"
+    directory: "/" 
+    schedule:
+      interval: "weekly"
+
+  # 2. Enable Git Submodules (Common in Unity for shared tools)
+  # If you don't use submodules, remove this block.
+  - package-ecosystem: "gitsubmodule"
     directory: "/"
     schedule:
       interval: "weekly"
