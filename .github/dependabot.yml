@@ -1,8 +1,0 @@
-version: 2
-updates:
-  # 1. Enable NuGet if you use .csproj files with <PackageReference>
-  # If you don't use NuGet packages, remove this block too!
-  - package-ecosystem: "nuget"
-    directory: "/" 
-    schedule:
-      interval: "weekly"
